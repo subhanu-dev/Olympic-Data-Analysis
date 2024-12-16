@@ -1,1 +1,1 @@
-## Exploratory Data Analysis on the olympic dataset using jupyter notebooks, numpy, pandas , matplotlib and seaborn
+## 120 Years of Olympics Data Analysis (1896-2016) 
