@@ -5,11 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-df_athletes = pd.read_csv(r"./data/athlete_events.csv")
-df_countries = pd.read_csv(r"./data/noc_regions.csv")
-df = df_athletes.merge(df_countries, how="left", on="NOC")
-df = df.drop_duplicates()
-df = df.drop(columns={"notes"})
+df = pd.read_csv("merged_df.csv")
 
 
 st.set_page_config(
@@ -29,9 +25,8 @@ df["Season"].value_counts().plot(
 ax1.set_title("Number of Contestants by Season")
 ax1.set_ylabel("")
 
-map_data = pd.DataFrame(
-    np.random.randn(1000, 2) / [50, 50] + [37.76, -122.4], columns=["lat", "lon"]
-)
+map_data = df["Latitudes", "Longitudes"]
+
 
 st.map(map_data)
 
