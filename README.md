@@ -19,6 +19,9 @@ After doing thorough EDA on the dataset, I also wanted to present some of the ke
 ## Streamlit Dashboard 
 ![image1](images/dashboard1.png)
 ![image2](images/dashboard2.png)
+![image3](images/dashboard3.png)
+![image4](images/dashboard4.png)
+
 
 [dashboard demo video](https://youtu.be/6W_0rG02ysQ)
 
