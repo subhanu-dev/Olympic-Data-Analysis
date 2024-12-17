@@ -34,9 +34,9 @@ def preprocess_data(data):
 
 st.title("Olympic Data Analysis (1896 - 2016) 🏅")
 
-st.markdown(
-    "A Historical analysis of the world's largest sporting event over a span of 120 years"
-)
+# st.markdown(
+#     "A Historical analysis of the world's largest sporting event over a span of 120 years"
+# )
 
 df = load_data("data/merged_df.csv")
 
@@ -54,23 +54,55 @@ with col1:
     col1_1, col1_2 = st.columns(2)  # defining sub columns
     with col1_1:
         year = st.selectbox(
-            "Select Year", sorted(filtered_data["Year"].unique()), index=None
+            "Select Year",
+            sorted(filtered_data["Year"].unique(), reverse=True),
+            index=None,
         )
-
-        if year is not None:
-            st.markdown((f" **Displaying results for {year}**"))
-        else:
-            st.markdown(("**Displaying results for all years**"))
 
     # filtering data only if we select a specific year or else we have the entire dataset
     if year is not None:
         filtered_data = filtered_data[filtered_data["Year"] == year]
 
+    with col1_2:
+        regions = len(filtered_data["region"].unique())
+        st.metric(label="Number of Countries", value=regions)
+
     ################### plotting map
 
-    st.subheader("Participating countries 🌍")
+    st.markdown("### Participating Regions")
     # Plotting the map with the filtered data
+
     st.map(filtered_data[["latitude", "longitude"]])
+
+    medal_count = (
+        filtered_data.groupby("region")["Medal"]
+        .count()
+        .sort_values(ascending=False)
+        .head(10)
+    )
+
+    colors = [
+        "#FF5733",
+        "#C70039",
+        "#900C3F",
+        "#581845",
+        "#FFC300",
+        "#DAF7A6",
+        "#33FF57",
+        "#39C7C7",
+        "#3357FF",
+        "#FF33A8",
+    ]
+
+    # Create the plot
+    fig, ax = plt.subplots()
+    medal_count.plot(kind="bar", x="", y="Medal", color=colors, ax=ax)
+    plt.xlabel("Countries")
+    plt.ylabel("Number of Medals")
+    plt.xticks(rotation=45)
+
+    st.subheader("Top 10 Countries Winning Medals")
+    st.pyplot(fig)
 
 
 ######gender distribution
@@ -79,8 +111,14 @@ with col2:
     st.subheader("Gender Distribution")
     fig, ax = plt.subplots(figsize=(4, 4))
     filtered_data["Sex"].value_counts().plot(
-        kind="pie", autopct="%1.2f%%", ax=ax, colors=["#66b3ff", "#99ff99", "#ffcc99"]
-    )  # Customize colors
+        kind="pie",
+        autopct="%1.2f%%",
+        ax=ax,
+        colors=["#66b3ff", "#99ff99"],
+        shadow=True,
+        explode=(0.05, 0.1),
+    )
+
     ax.set_ylabel("")  # Hide the y-axis label
     st.pyplot(fig)
 
@@ -129,3 +167,6 @@ top_athletes.columns = ["Athlete Name", "Sex", "Medal Count"]
 st.subheader("Top 10 Athletes by Medal Count")
 
 st.dataframe(top_athletes)
+
+st.markdown("---")
+st.markdown("Made with ❤️ by  [Subhanu](https://github.com/subhanu-dev)")
