@@ -5,30 +5,55 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-df = pd.read_csv("merged_df.csv")
-
-
 st.set_page_config(
     page_title="Olympic Data Analysis",  # setting page title and favicon
     page_icon="🏅",
     layout="wide",  # setting it to display in the wide layout
 )
 
-st.title("Olympic Data Analysis (1896 - 2026)")
 
-st.markdown("hi machn")
+@st.cache_data  # making the data cached so we don't load the dataset all the time.
+def load_data(filepath):
+    return pd.read_csv(filepath)
 
-fig1, ax1 = plt.subplots(figsize=(6, 6))  # Specify plot size
-df["Season"].value_counts().plot(
-    kind="pie", autopct="%1.1f%%", ax=ax1, colors=["#66b3ff", "#99ff99"]
+
+@st.cache_data
+def preprocess_data(data):
+    # Rename columns and drop missing lat/lon rows
+    data = data.rename(
+        columns={"Latitude": "latitude", "Longitude": "longitude"}
+    )  # Streamlit requires the latitude column to have specific names like LAT, LATITUDE, lat, or latitude
+    data = data.dropna(
+        subset=["latitude", "longitude"]
+    )  # removes rows from the DataFrame df where the values in the columns "latitude" or "longitude" are NaN (missing).
+    return data
+
+
+################################################################
+
+
+st.title("Olympic Data Analysis (1896 - 2016) 🏅")
+
+st.markdown(
+    "A Historical analysis of the world's largest sporting event over a span of 120 years"
 )
-ax1.set_title("Number of Contestants by Season")
-ax1.set_ylabel("")
 
-map_data = df["Latitudes", "Longitudes"]
+df = load_data("data/merged_df.csv")
+
+########Map
 
 
-st.map(map_data)
+filtered_data = preprocess_data(df)
+
+year = st.sidebar.selectbox("Select Year", sorted(filtered_data["Year"].unique()))
+filtered_data = filtered_data[filtered_data["Year"] == year]
+
+# Plot the filtered data
+st.map(filtered_data[["latitude", "longitude"]])
+
+
+######
+
 
 st.selectbox(options=["today", "tomorrow"], label="subhanu")
 
