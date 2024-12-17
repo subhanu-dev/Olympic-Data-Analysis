@@ -29,7 +29,31 @@ def preprocess_data(data):
     return data
 
 
-################################################################
+@st.cache_data
+def get_medal_count(data):
+    medal_count = (
+        data.groupby("region")["Medal"].count().sort_values(ascending=False).head(10)
+    )
+    # Reset the index to convert the Series to a DataFrame
+    medal_count = medal_count.reset_index()
+    return medal_count
+
+
+@st.cache_data
+def get_country_data(data):
+    medal_counts = df.groupby(["Year", "Team"])["Medal"].count().reset_index()
+    top_countries = (
+        medal_counts.groupby("Team")["Medal"]
+        .sum()
+        .sort_values(ascending=False)
+        .head(10)
+        .index
+    )
+    top_countries_data = medal_counts[medal_counts["Team"].isin(top_countries)]
+    return top_countries_data
+
+
+###################################################################################################################################################
 
 
 st.title("Olympic Data Analysis (1896 - 2016) 🏅")
@@ -38,11 +62,12 @@ st.title("Olympic Data Analysis (1896 - 2016) 🏅")
 #     "A Historical analysis of the world's largest sporting event over a span of 120 years"
 # )
 
+# loading the data
 df = load_data("data/merged_df.csv")
 
 # setting columns
 
-col1, col2, col3 = st.columns([2, 1, 1])
+col1, col2 = st.columns([2, 1])
 
 
 ############## filtering data and select box
@@ -51,7 +76,7 @@ filtered_data = preprocess_data(df)
 
 
 with col1:
-    col1_1, col1_2 = st.columns(2)  # defining sub columns
+    col1_1, col1_2, col1_3 = st.columns(3)  # defining sub columns
     with col1_1:
         year = st.selectbox(
             "Select Year",
@@ -67,6 +92,10 @@ with col1:
         regions = len(filtered_data["region"].unique())
         st.metric(label="Number of Countries", value=regions)
 
+    with col1_3:
+        sum = filtered_data["Name"].nunique()
+        st.metric(label="Number of Contestants", value=sum)
+
     ################### plotting map
 
     st.markdown("### Participating Regions")
@@ -74,99 +103,100 @@ with col1:
 
     st.map(filtered_data[["latitude", "longitude"]])
 
-    medal_count = (
-        filtered_data.groupby("region")["Medal"]
-        .count()
-        .sort_values(ascending=False)
-        .head(10)
-    )
+    ############## plotting the bar graph of top countries
+    medal_count = get_medal_count(filtered_data)
 
-    colors = [
-        "#FF5733",
-        "#C70039",
-        "#900C3F",
-        "#581845",
-        "#FFC300",
-        "#DAF7A6",
-        "#33FF57",
-        "#39C7C7",
-        "#3357FF",
-        "#FF33A8",
-    ]
+    sns.set_theme(style="whitegrid")
 
-    # Create the plot
-    fig, ax = plt.subplots()
-    medal_count.plot(kind="bar", x="", y="Medal", color=colors, ax=ax)
+    # Creating the map
+    fig, ax = plt.subplots(figsize=(10, 4))
+    sns.barplot(x="region", y="Medal", data=medal_count, palette="viridis", ax=ax)
     plt.xlabel("Countries")
     plt.ylabel("Number of Medals")
     plt.xticks(rotation=45)
 
     st.subheader("Top 10 Countries Winning Medals")
     st.pyplot(fig)
+    st.markdown("<br>", unsafe_allow_html=True)
+    medal_count.index = range(1, len(medal_count) + 1)
+    st.dataframe(medal_count.T)
 
-
-######gender distribution
 
 with col2:
+    ##############age distribution
+    st.subheader("Age Distribution")
+    fig, ax = plt.subplots(figsize=(10, 6))
+    plt.title("Athletes Age Distribution")
+    plt.xlabel("Age")
+    plt.ylabel("Number")
+
+    # Plot using seaborn
+    sns.histplot(
+        data=filtered_data,
+        x="Age",
+        bins=np.arange(10, 80, 2),
+        color="#099e50",
+        edgecolor="red",
+    )
+
+    # Show the plot in Streamlit
+    st.pyplot(fig)
+
+    ######gender distribution
     st.subheader("Gender Distribution")
-    fig, ax = plt.subplots(figsize=(4, 4))
+    fig, ax = plt.subplots(figsize=(6, 6))
     filtered_data["Sex"].value_counts().plot(
         kind="pie",
         autopct="%1.2f%%",
         ax=ax,
-        colors=["#66b3ff", "#99ff99"],
+        colors=["#ffa04c", "#099e50"],
         shadow=True,
         explode=(0.05, 0.1),
     )
 
-    ax.set_ylabel("")  # Hide the y-axis label
+    # Displaying top athletes in the history of olympics
+    top_athletes = (
+        df.groupby(["Name", "Sex"])["Medal"]
+        .count()
+        .sort_values(ascending=False)
+        .reset_index()
+        .head(10)  # Select the top 10
+    )
+
+    ax.set_ylabel("")  # Hiding the y-axis label
     st.pyplot(fig)
+    # Rename columns for better display
+    top_athletes.columns = ["Athlete Name", "Sex", "Medal Count"]
+    st.subheader("Top 10 Athletes by Medal Count")
+    top_athletes.index = range(1, len(top_athletes) + 1)
+    st.dataframe(top_athletes)
 
+st.markdown("<br>", unsafe_allow_html=True)
+st.subheader("Top 10 Countries' Olympic Performance - Against Time ")
+# Add a slider to the sidebar:
+selected_years = st.slider("Select a range of years", 1896, 2016, (2000, 2016))
+top_countries_data = get_country_data(df)
+specified_data = top_countries_data[
+    top_countries_data["Year"].between(selected_years[0], selected_years[1])
+]
 
-st.selectbox(options=["today", "tomorrow"], label="subhanu")
-
-if st.checkbox("Show dataframe"):
-    chart_data = pd.DataFrame(np.random.randn(20, 3), columns=["a", "b", "c"])
-
-    chart_data
-
-# Add a selectbox to the sidebar:
-add_selectbox = st.selectbox(
-    "How would you like to be contacted?", ("Email", "Home phone", "Mobile phone")
+fig, ax = plt.subplots(figsize=(18, 4))
+sns.lineplot(
+    data=specified_data,
+    x="Year",
+    y="Medal",
+    hue="Team",
+    ax=ax,
 )
 
-# Add a slider to the sidebar:
-add_slider = st.slider("Select a range of values", 0.0, 100.0, (25.0, 75.0))
-
-
-left_column, right_column = st.columns(2)
-# You can use a column just like st.sidebar:
-left_column.button("Press me!")
-
-# Or even better, call Streamlit functions inside a "with" block:
-with right_column:
-    chosen = st.radio(
-        "Sorting hat", ("Gryffindor", "Ravenclaw", "Hufflepuff", "Slytherin")
-    )
-    st.write(f"You are in {chosen} house!")
+plt.xlabel("Year")
+plt.ylabel("Number of Medals")
+plt.legend(fontsize=10, loc="upper right")
+st.pyplot(plt)
 
 
 ########################################################################################################
 
-# Displaying top athletes in the history of olympics
-top_athletes = (
-    df.groupby(["Name", "Sex"])["Medal"]
-    .count()
-    .sort_values(ascending=False)
-    .reset_index()
-    .head(10)  # Select the top 10
-)
-
-# Rename columns for better display
-top_athletes.columns = ["Athlete Name", "Sex", "Medal Count"]
-st.subheader("Top 10 Athletes by Medal Count")
-
-st.dataframe(top_athletes)
 
 st.markdown("---")
 st.markdown("Made with ❤️ by  [Subhanu](https://github.com/subhanu-dev)")
