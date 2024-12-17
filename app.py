@@ -58,9 +58,10 @@ def get_country_data(data):
 
 st.title("Olympic Data Analysis (1896 - 2016) 🏅")
 
-# st.markdown(
-#     "A Historical analysis of the world's largest sporting event over a span of 120 years"
-# )
+st.markdown(
+    "A Historical analysis of the world's largest sporting event over a span of 120 years. Full analysis notebook ➡️ [notebook](https://github.com/subhanu-dev/Olympic-Data-Analysis/blob/main/Olympic%20Data%20Analysis.ipynb)"
+)
+
 
 # loading the data
 df = load_data("data/merged_df.csv")
