@@ -40,19 +40,49 @@ st.markdown(
 
 df = load_data("data/merged_df.csv")
 
-########Map
+# setting columns
 
+col1, col2, col3 = st.columns([2, 1, 1])
+
+
+############## filtering data and select box
 
 filtered_data = preprocess_data(df)
 
-year = st.sidebar.selectbox("Select Year", sorted(filtered_data["Year"].unique()))
-filtered_data = filtered_data[filtered_data["Year"] == year]
 
-# Plot the filtered data
-st.map(filtered_data[["latitude", "longitude"]])
+with col1:
+    col1_1, col1_2 = st.columns(2)  # defining sub columns
+    with col1_1:
+        year = st.selectbox(
+            "Select Year", sorted(filtered_data["Year"].unique()), index=None
+        )
+
+        if year is not None:
+            st.markdown((f" **Displaying results for {year}**"))
+        else:
+            st.markdown(("**Displaying results for all years**"))
+
+    # filtering data only if we select a specific year or else we have the entire dataset
+    if year is not None:
+        filtered_data = filtered_data[filtered_data["Year"] == year]
+
+    ################### plotting map
+
+    st.subheader("Participating countries 🌍")
+    # Plotting the map with the filtered data
+    st.map(filtered_data[["latitude", "longitude"]])
 
 
-######
+######gender distribution
+
+with col2:
+    st.subheader("Gender Distribution")
+    fig, ax = plt.subplots(figsize=(4, 4))
+    filtered_data["Sex"].value_counts().plot(
+        kind="pie", autopct="%1.2f%%", ax=ax, colors=["#66b3ff", "#99ff99", "#ffcc99"]
+    )  # Customize colors
+    ax.set_ylabel("")  # Hide the y-axis label
+    st.pyplot(fig)
 
 
 st.selectbox(options=["today", "tomorrow"], label="subhanu")
@@ -63,12 +93,12 @@ if st.checkbox("Show dataframe"):
     chart_data
 
 # Add a selectbox to the sidebar:
-add_selectbox = st.sidebar.selectbox(
+add_selectbox = st.selectbox(
     "How would you like to be contacted?", ("Email", "Home phone", "Mobile phone")
 )
 
 # Add a slider to the sidebar:
-add_slider = st.sidebar.slider("Select a range of values", 0.0, 100.0, (25.0, 75.0))
+add_slider = st.slider("Select a range of values", 0.0, 100.0, (25.0, 75.0))
 
 
 left_column, right_column = st.columns(2)
@@ -98,10 +128,4 @@ top_athletes = (
 top_athletes.columns = ["Athlete Name", "Sex", "Medal Count"]
 st.subheader("Top 10 Athletes by Medal Count")
 
-
-col1, col2 = st.columns(2)  # Create two columns for side-by-side layout
-
-with col1:
-    st.pyplot(fig1)
-with col2:
-    st.table(top_athletes)
+st.dataframe(top_athletes)
