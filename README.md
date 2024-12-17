@@ -16,7 +16,11 @@ After doing thorough EDA on the dataset, I also wanted to present some of the ke
 ![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
 ![Jupyter](https://img.shields.io/badge/Jupyter-F37626?style=for-the-badge&logo=jupyter&logoColor=white)
 
+## Streamlit Dashboard 
+![image1](images/dashboard1.png)
+![image2](images/dashboard2.png)
 
+[dashboard demo video](https://youtu.be/6W_0rG02ysQ)
 
 
 ---
